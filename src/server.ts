@@ -1,15 +1,14 @@
 import app from './app';
 import mongoose from 'mongoose';
 import 'dotenv/config';
-
 import config from './app/config';
 // getting-started.js
-
+import { Server } from 'http';
+let server: Server;
 async function main() {
   try {
-    const conn = await mongoose.connect(config.database_url as string);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    app.listen(config.port, () => {
+    await mongoose.connect(config.database_url as string);
+    server = app.listen(config.port, () => {
       console.log(`Example app listening on port ${config.port}`);
     });
   } catch (error) {
@@ -17,4 +16,27 @@ async function main() {
   }
 }
 main();
+
+process.on('unhandledRejection', () => {
+  console.log('unhandledRejection is detected, shutting down ...');
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+process.on('uncaughtException', () => {
+  console.log('uncaughtException is detected, shutting down ...');
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+
+
 
